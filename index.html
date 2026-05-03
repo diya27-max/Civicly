@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civicly - Interactive Election Assistant</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen font-sans antialiased overflow-x-hidden selection:bg-brand-500 selection:text-white flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center shadow-md">
+                        <i class="fa-solid fa-landmark text-white text-xl"></i>
+                    </div>
+                    <span class="font-bold text-2xl tracking-tight text-slate-800">Civicly</span>
+                </div>
+                
+                <!-- Desktop Tabs -->
+                <div class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('assistant')" id="tab-assistant" class="tab-btn px-4 py-2 rounded-md font-medium transition-colors text-brand-600 bg-brand-50">
+                        <i class="fa-solid fa-robot mr-2"></i>Assistant
+                    </button>
+                    <button onclick="switchTab('flashcards')" id="tab-flashcards" class="tab-btn px-4 py-2 rounded-md font-medium transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100">
+                        <i class="fa-solid fa-layer-group mr-2"></i>Flashcards
+                    </button>
+                    <button onclick="switchTab('data')" id="tab-data" class="tab-btn px-4 py-2 rounded-md font-medium transition-colors text-slate-500 hover:text-slate-900 hover:bg-slate-100">
+                        <i class="fa-solid fa-chart-line mr-2"></i>Trends
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-5xl mx-auto w-full px-4 py-8 flex flex-col">
+        
+        <!-- Header & Countdown Section -->
+        <div class="mb-8 flex flex-col md:flex-row gap-6 justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Election Center</h1>
+                <p class="text-slate-500">Your interactive guide to understanding the democratic process.</p>
+            </div>
+            <!-- Countdown Timer -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 min-w-[300px]">
+                <h3 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider text-center">Next General Election</h3>
+                <div class="flex justify-center gap-3" id="countdown-container">
+                    <!-- Countdown populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content Areas -->
+        <div class="flex-1 relative bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px] flex flex-col">
+            
+            <!-- AI Assistant Tab -->
+            <div id="content-assistant" class="tab-content absolute inset-0 flex flex-col opacity-100 pointer-events-auto transition-opacity duration-300">
+                <div class="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <img src="https://ui-avatars.com/api/?name=Civicly&background=2563eb&color=fff&rounded=true" alt="AI Avatar" class="w-10 h-10 rounded-full shadow-sm">
+                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-slate-800">Civicly Assistant</h2>
+                            <p class="text-xs text-slate-500">Always here to help</p>
+                        </div>
+                    </div>
+                    <button class="text-slate-400 hover:text-red-500 transition-colors" title="Clear Chat" onclick="clearChat()">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+                
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
+                    <!-- Initial AI Message -->
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center shrink-0 shadow-md">
+                            <i class="fa-solid fa-robot text-xs text-white"></i>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-700 max-w-[85%] shadow-sm">
+                            Hello! I am your politically neutral Civicly assistant. I can help you understand election timelines, procedural steps, and key terminology. How can I assist you today?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white border-t border-slate-200">
+                    <form id="chat-form" class="relative flex items-center">
+                        <input type="text" id="chat-input" autocomplete="off" placeholder="Ask a question..." class="w-full bg-slate-100 border-transparent text-slate-800 text-sm rounded-full focus:ring-2 focus:ring-brand-500 focus:bg-white block px-5 py-3 pr-14 transition-all outline-none shadow-inner">
+                        <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-white bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-200 font-medium rounded-full text-sm p-2 transition-colors">
+                            <i class="fa-solid fa-paper-plane px-1 py-0.5"></i>
+                        </button>
+                    </form>
+                    <div class="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
+                        <button class="suggestion-btn whitespace-nowrap px-4 py-1.5 rounded-full bg-slate-100 hover:bg-brand-50 text-slate-600 hover:text-brand-700 text-xs transition-colors font-medium">How does a primary work?</button>
+                        <button class="suggestion-btn whitespace-nowrap px-4 py-1.5 rounded-full bg-slate-100 hover:bg-brand-50 text-slate-600 hover:text-brand-700 text-xs transition-colors font-medium">What is the electoral college?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flashcards Tab -->
+            <div id="content-flashcards" class="tab-content absolute inset-0 flex flex-col opacity-0 pointer-events-none transition-opacity duration-300 p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Study Deck</h2>
+                        <p class="text-slate-500 text-sm">Master election terminology.</p>
+                    </div>
+                    <span class="text-sm font-bold px-3 py-1 bg-brand-100 text-brand-700 rounded-full" id="card-counter">1 / 10</span>
+                </div>
+                
+                <div class="flex-1 flex flex-col items-center justify-center">
+                    <div class="scene perspective-1000 w-full max-w-md h-[300px] cursor-pointer group" onclick="flipCard()">
+                        <div id="flashcard" class="card relative w-full h-full transition-transform duration-500 transform-style-3d shadow-lg rounded-3xl border border-slate-200 group-hover:shadow-xl group-hover:border-brand-300 bg-white">
+                            <!-- Front -->
+                            <div class="card-face card-front absolute w-full h-full backface-hidden rounded-3xl flex flex-col items-center justify-center p-8 text-center bg-white">
+                                <i class="fa-solid fa-graduation-cap text-4xl text-brand-200 mb-6"></i>
+                                <h3 class="text-3xl font-extrabold text-slate-800 mb-2" id="card-term">Term</h3>
+                                <p class="text-sm text-brand-500 mt-6 font-medium animate-pulse">Click to flip</p>
+                            </div>
+                            <!-- Back -->
+                            <div class="card-face card-back absolute w-full h-full backface-hidden rounded-3xl flex flex-col items-center justify-center p-8 text-center transform-rotate-y-180 bg-brand-50 border-2 border-brand-200">
+                                <h3 class="text-sm font-bold text-brand-600 mb-4 uppercase tracking-wider">Definition</h3>
+                                <p class="text-lg text-slate-700 leading-relaxed font-medium" id="card-def">Definition here.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4 mt-8">
+                        <button onclick="prevCard()" class="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors shadow-sm">
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Previous
+                        </button>
+                        <button onclick="nextCard()" class="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold transition-colors shadow-sm shadow-brand-500/30">
+                            Next <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Poll History Tab -->
+            <div id="content-data" class="tab-content absolute inset-0 flex flex-col opacity-0 pointer-events-none transition-opacity duration-300 p-8">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Historical Turnout</h2>
+                    <p class="text-slate-500 text-sm">Visualizing voter participation over the last few cycles.</p>
+                </div>
+                <div class="flex-1 w-full relative">
+                    <canvas id="pollChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
